@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nico Browse</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #202124;
+      color: white;
+    }
+
+    #tabs {
+      display: flex;
+      background: #303134;
+      padding: 5px;
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: 6px 12px;
+      background: #3c4043;
+      margin-right: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .tab.active {
+      background: #5f6368;
+    }
+
+    .close {
+      margin-left: 8px;
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    #toolbar {
+      display: flex;
+      padding: 10px;
+      background: #303134;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 20px;
+      border: none;
+      background: #202124;
+      color: white;
+    }
+
+    button {
+      background: #3c4043;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #browserArea {
+      position: relative;
+      height: calc(100vh - 100px);
+    }
+
+    iframe {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: white;
+    }
+
+    iframe.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="tabs"></div>
+
+<div id="toolbar">
+  <button onclick="newTab()">＋</button>
+  <button onclick="goBack()">←</button>
+  <button onclick="goForward()">→</button>
+  <button onclick="reload()">⟳</button>
+  <input id="addressBar" placeholder="Search or enter URL" onkeydown="handleEnter(event)">
+</div>
+
+<div id="browserArea"></div>
+
+<script>
+let tabs = [];
+let currentTab = null;
+
+function newTab(url="https://example.com") {
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+
+  document.getElementById("browserArea").appendChild(iframe);
+
+  tabs.push(iframe);
+  switchTab(tabs.length - 1);
+  renderTabs();
+}
+
+function switchTab(index) {
+  tabs.forEach((frame, i) => {
+    frame.classList.toggle("active", i === index);
+  });
+
+  currentTab = index;
+  document.getElementById("addressBar").value = tabs[index].src;
+  renderTabs();
+}
+
+function renderTabs() {
+  const tabsDiv = document.getElementById("tabs");
+  tabsDiv.innerHTML = "";
+
+  tabs.forEach((tab, i) => {
+    const el = document.createElement("div");
+    el.className = "tab" + (i === currentTab ? " active" : "");
+    el.innerHTML = `
+      Tab ${i+1} <span class="close" onclick="closeTab(${i})">✕</span>
+    `;
+    el.onclick = () => switchTab(i);
+    tabsDiv.appendChild(el);
+  });
+}
+
+function closeTab(index) {
+  tabs[index].remove();
+  tabs.splice(index, 1);
+
+  if (currentTab >= tabs.length) currentTab = tabs.length - 1;
+  if (tabs.length === 0) return;
+
+  switchTab(currentTab);
+}
+
+function handleEnter(e) {
+  if (e.key === "Enter") {
+    let val = addressBar.value;
+
+    if (!val.startsWith("http")) {
+      val = "https://duckduckgo.com/?q=" + encodeURIComponent(val);
+    }
+
+    tabs[currentTab].src = val;
+  }
+}
+
+function goBack() {
+  tabs[currentTab].contentWindow.history.back();
+}
+
+function goForward() {
+  tabs[currentTab].contentWindow.history.forward();
+}
+
+function reload() {
+  tabs[currentTab].contentWindow.location.reload();
+}
+
+newTab();
+</script>
+
+</body>
+</html>
